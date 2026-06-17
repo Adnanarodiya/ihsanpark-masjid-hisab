@@ -152,6 +152,41 @@ function setupSecurityEventListeners() {
   // Focus the first field
   if (digits[0]) digits[0].focus();
 
+  const submitPin = () => {
+    const pinValue = digits.map(input => input.value).join("");
+    
+    if (pinValue === "7866") {
+      sessionStorage.setItem("unlocked", "true");
+      
+      lockScreen.style.transition = "opacity 0.35s ease, transform 0.35s ease";
+      lockScreen.style.opacity = "0";
+      lockScreen.style.transform = "scale(1.05)";
+      
+      setTimeout(() => {
+        lockScreen.style.display = "none";
+        appShell.style.display = "flex";
+        
+        loadData();
+        setupEventListeners();
+      }, 350);
+      
+    } else {
+      lockError.textContent = "Incorrect PIN. Access Denied.";
+      lockContainer.classList.add("shake");
+      
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      
+      setTimeout(() => {
+        lockContainer.classList.remove("shake");
+      }, 400);
+
+      digits.forEach(input => {
+        if (input) input.value = "";
+      });
+      if (digits[0]) digits[0].focus();
+    }
+  };
+
   digits.forEach((input, index) => {
     if (!input) return;
 
@@ -160,6 +195,12 @@ function setupSecurityEventListeners() {
       if (value.length > 0) {
         if (index < 3) {
           digits[index + 1].focus();
+        } else {
+          // Typed the 4th digit, auto-submit
+          const pinValue = digits.map(inp => inp.value).join("");
+          if (pinValue.length === 4) {
+            submitPin();
+          }
         }
       }
     });
@@ -188,44 +229,18 @@ function setupSecurityEventListeners() {
       
       const focusIndex = Math.min(cleanedData.length, 3);
       if (digits[focusIndex]) digits[focusIndex].focus();
+
+      const pinValue = digits.map(inp => inp.value).join("");
+      if (pinValue.length === 4) {
+        submitPin();
+      }
     });
   });
 
   if (lockForm) {
     lockForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      const pinValue = digits.map(input => input.value).join("");
-      
-      if (pinValue === "7866") {
-        sessionStorage.setItem("unlocked", "true");
-        
-        lockScreen.style.transition = "opacity 0.35s ease, transform 0.35s ease";
-        lockScreen.style.opacity = "0";
-        lockScreen.style.transform = "scale(1.05)";
-        
-        setTimeout(() => {
-          lockScreen.style.display = "none";
-          appShell.style.display = "flex";
-          
-          loadData();
-          setupEventListeners();
-        }, 350);
-        
-      } else {
-        lockError.textContent = "Incorrect PIN. Access Denied.";
-        lockContainer.classList.add("shake");
-        
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-        
-        setTimeout(() => {
-          lockContainer.classList.remove("shake");
-        }, 400);
-
-        digits.forEach(input => {
-          if (input) input.value = "";
-        });
-        if (digits[0]) digits[0].focus();
-      }
+      submitPin();
     });
   }
 }
