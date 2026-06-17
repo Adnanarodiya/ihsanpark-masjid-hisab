@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ihsanpark Masjid Hisab Dashboard. Track Jumma, Lillah, Madrasah, and Taravih collections with real-time Google Sheets sync.">
+  <title>Ihsanpark Masjid Hisab</title>
+
+  <!-- Google Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap">
+  
+  <!-- Tabler Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+  <!-- Style Link -->
+  <link rel="stylesheet" href="style.css?v=1.0.2">
+
+  <!-- PWA & Mobile Web App Meta -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/48/mosque.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Masjid Hisab">
+  <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/mosque.png">
+</head>
+<body>
+
+  <!-- Security Lock Screen Overlay -->
+  <div class="lock-screen-overlay" id="lock-screen" aria-hidden="false" role="dialog" aria-labelledby="lock-title">
+    <div class="lock-container" id="lock-container">
+      <img src="https://img.icons8.com/fluency/96/mosque.png" alt="Mosque Logo" class="lock-logo" width="80" height="80" />
+      <h2 class="lock-title" id="lock-title">Security PIN</h2>
+      <p class="lock-subtitle">Please enter PIN to access Ihsanpark Masjid Hisab</p>
+      
+      <form class="lock-form" id="lock-form" autocomplete="off" novalidate>
+        <div class="pin-inputs-row">
+          <input type="password" maxlength="1" pattern="[0-9]*" inputmode="numeric" class="pin-digit" id="pin-1" required autocomplete="off" aria-label="Digit 1" />
+          <input type="password" maxlength="1" pattern="[0-9]*" inputmode="numeric" class="pin-digit" id="pin-2" required autocomplete="off" aria-label="Digit 2" />
+          <input type="password" maxlength="1" pattern="[0-9]*" inputmode="numeric" class="pin-digit" id="pin-3" required autocomplete="off" aria-label="Digit 3" />
+          <input type="password" maxlength="1" pattern="[0-9]*" inputmode="numeric" class="pin-digit" id="pin-4" required autocomplete="off" aria-label="Digit 4" />
+        </div>
+        <span class="lock-error-msg" id="lock-error"></span>
+        <button type="submit" class="btn-lock-submit" id="lock-submit-btn">
+          <i class="ti ti-key" aria-hidden="true"></i><span>Unlock</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App Shell -->
+  <main class="app-container" id="app-shell" style="display: none;">
+    
+    <!-- Header Area -->
+    <header class="app-header">
+      <div class="brand-wrapper">
+        <h1 class="brand-title" id="main-heading">
+          <img src="https://img.icons8.com/fluency/48/mosque.png" alt="Mosque Logo" class="brand-logo" width="26" height="26" /> Ihsanpark
+        </h1>
+        <div class="brand-subtitle">
+          <span id="header-subtitle">Masjid Hisab</span>
+        </div>
+      </div>
+      
+      <!-- Top Action Controls -->
+      <div class="header-actions">
+        <button class="btn-action" id="refresh-btn" aria-label="Sync Data" title="Sync Spreadsheet">
+          <i class="ti ti-refresh" aria-hidden="true"></i>
+        </button>
+        <button class="btn-add-record" id="open-modal-btn" aria-label="Add Financial Record">
+          <i class="ti ti-plus" aria-hidden="true"></i><span>Add</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Scrollable Content Wrapper -->
+    <div class="app-content">
+      
+      <!-- Panel 1: Dashboard (Active by default) -->
+      <div class="view-panel active" id="panel-dashboard">
+        
+        <!-- Connection Badge & Sync -->
+        <div class="sync-banner">
+          <span class="sync-status" id="sync-status-dashboard">
+            <i class="ti ti-cloud-check"></i> Connected
+          </span>
+          <span class="sync-time" id="sync-time-label">Just now</span>
+        </div>
+
+        <!-- KPI Grid -->
+        <section class="kpi-grid" aria-label="Financial Summary Stats">
+          <!-- Combined Balance Card -->
+          <div class="kpi-card combined">
+            <div class="kpi-icon-wrap">
+              <i class="ti ti-wallet"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-label">Total Balance Collection</span>
+              <h2 class="kpi-value" id="kpi-grand-total">₹0</h2>
+              <span class="kpi-desc">All categories combined</span>
+            </div>
+          </div>
+
+          <!-- Jumma Card -->
+          <div class="kpi-card category-card" data-category="jumma">
+            <div class="kpi-icon-wrap">
+              <i class="ti ti-calendar-event"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-label">Jumma (Friday)</span>
+              <h2 class="kpi-value" id="kpi-jumma">₹0</h2>
+              <span class="kpi-desc">Weekly Friday Chanda</span>
+            </div>
+          </div>
+
+          <!-- Lillah Card -->
+          <div class="kpi-card category-card" data-category="lillah">
+            <div class="kpi-icon-wrap">
+              <i class="ti ti-heart"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-label">Lillah</span>
+              <h2 class="kpi-value" id="kpi-lillah">₹0</h2>
+              <span class="kpi-desc">Voluntary General Charity</span>
+            </div>
+          </div>
+
+          <!-- Madrasah Card -->
+          <div class="kpi-card category-card" data-category="madresah">
+            <div class="kpi-icon-wrap">
+              <i class="ti ti-school"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-label">Madrasah</span>
+              <h2 class="kpi-value" id="kpi-madrasah">₹0</h2>
+              <span class="kpi-desc">Education / Fees Ledger</span>
+            </div>
+          </div>
+
+          <!-- Taravih Card -->
+          <div class="kpi-card category-card" data-category="taravih">
+            <div class="kpi-icon-wrap">
+              <i class="ti ti-moon"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-label">Taravih Net</span>
+              <h2 class="kpi-value" id="kpi-taravih">₹0</h2>
+              <div class="taravih-sub-ratios">
+                <span class="taravih-inc" id="kpi-taravih-inc">In: ₹0</span>
+                <span class="taravih-divider">•</span>
+                <span class="taravih-exp" id="kpi-taravih-exp">Out: ₹0</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Pie Chart Breakdown -->
+        <section class="analytics-card" aria-label="Income Distribution Breakdown">
+          <h3 class="analytics-title">Income Distribution Breakdown</h3>
+          <p class="analytics-subtitle">Calculated ratio of total collections</p>
+          
+          <div class="chart-container">
+            <div class="chart-wrapper" id="chart-wrapper">
+              <svg viewBox="0 0 200 200">
+                <circle class="chart-circle-bg" cx="100" cy="100" r="80"></circle>
+              </svg>
+              <div class="chart-center-text">
+                <span class="chart-center-amount" id="chart-total-label">₹0</span>
+                <span class="chart-center-label">Total Income</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-legend" id="chart-legend">
+            <!-- Dynamically populated legend -->
+          </div>
+        </section>
+
+        <!-- Informational Guideline Card -->
+        <div class="info-tip-box">
+          <i class="ti ti-info-circle"></i>
+          <div>
+            <strong>🕌 Masjid Hisab System:</strong> Use the bottom tabs to access specific ledgers, search entries, or add collections in real-time.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Panel 2: Ledger Lists (Jumma, Lillah, Madrasah, Taravih dynamically configured) -->
+      <div class="view-panel" id="panel-ledger">
+        
+        <!-- Active Tab Headline Banner -->
+        <div class="ledger-banner-header">
+          <h2 id="ledger-title" class="ledger-title-text"><i class="ti ti-list"></i> Jumma</h2>
+          <span class="category-pill" id="ledger-category-badge">ledger</span>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <section class="controls-section" aria-label="Ledger search and filters">
+          <div class="controls-grid">
+            <div class="search-input-wrapper">
+              <i class="ti ti-search search-icon" aria-hidden="true"></i>
+              <input type="text" id="search" class="search-input" placeholder="Search date, note, donor name..." autocomplete="off" aria-label="Search ledger" />
+              <button class="search-clear" id="search-clear" aria-label="Clear Search Input">
+                <i class="ti ti-x" aria-hidden="true"></i>
+              </button>
+            </div>
+
+
+
+            <!-- Year Filter (Visible only for Taravih) -->
+            <div class="filter-wrapper" id="year-filter-wrap" style="display: none;">
+              <select id="yearFilter" class="form-select" aria-label="Filter by Ramadan year">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- Meta Info Row (Count, Sync Status) -->
+        <div class="meta-info-row">
+          <span class="shops-count" id="count">0 records listed</span>
+          <span class="sync-status" id="sync-status-ledger">
+            <i class="ti ti-cloud-check"></i> Connected
+          </span>
+        </div>
+
+        <!-- Ledger Statistics Box -->
+        <div class="ledger-summary-stats-box">
+          <div class="summary-col">
+            <span class="sum-label">Filtered Total</span>
+            <span class="sum-val" id="ledger-filtered-sum">₹0</span>
+          </div>
+          <div class="summary-col" id="taravih-extra-summary" style="display: none;">
+            <span class="sum-label">Net Balance</span>
+            <span class="sum-val" id="ledger-filtered-net">₹0</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Results List Cards -->
+        <section class="results-list" id="results" aria-label="Financial Logs List">
+          <!-- Loaded Dynamically by app.js -->
+        </section>
+
+      </div>
+
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" id="nav-btn-dashboard" data-panel="dashboard" aria-label="Dashboard Overview">
+        <i class="ti ti-chart-pie"></i>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" id="nav-btn-jumma" data-panel="ledger" data-category="jumma" aria-label="Jumma Ledger">
+        <i class="ti ti-calendar-event"></i>
+        <span>Jumma</span>
+      </button>
+      <button class="nav-item" id="nav-btn-lillah" data-panel="ledger" data-category="lillah" aria-label="Lillah Ledger">
+        <i class="ti ti-heart"></i>
+        <span>Lillah</span>
+      </button>
+      <button class="nav-item" id="nav-btn-madresah" data-panel="ledger" data-category="madresah" aria-label="Madrasah Ledger">
+        <i class="ti ti-school"></i>
+        <span>Madrasah</span>
+      </button>
+      <button class="nav-item" id="nav-btn-taravih" data-panel="ledger" data-category="taravih" aria-label="Taravih Ledger">
+        <i class="ti ti-moon"></i>
+        <span>Taravih</span>
+      </button>
+    </nav>
+
+    <!-- Floating Toast Notification -->
+    <div class="toast" id="toast" role="alert" aria-live="polite">
+      <!-- Injected Dynamically -->
+    </div>
+
+  </main>
+
+  <!-- Add/Edit Transaction Modal Overlay -->
+  <div class="modal-overlay" id="modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="modal-title">
+    <div class="modal-container">
+      <header class="modal-header">
+        <h2 class="modal-title" id="modal-title">Add Transaction Record</h2>
+        <button class="btn-modal-close" id="close-modal-btn" aria-label="Close dialog">
+          <i class="ti ti-x" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <form class="modal-form" id="member-form" novalidate>
+        <!-- Category Selector -->
+        <div class="form-group">
+          <label for="form-category">Category Ledger <span class="required">*</span></label>
+          <select id="form-category" class="form-select" required>
+            <option value="jumma">Jumma (Weekly Friday)</option>
+            <option value="lillah">Lillah (General Charity)</option>
+            <option value="madresah">Madrasah (Education Fee)</option>
+            <option value="taravih">Taravih (Annual Ramadan)</option>
+          </select>
+        </div>
+
+        <!-- Date & Amount Row -->
+        <div class="form-group-row">
+          <div class="form-group">
+            <label for="form-date">Date <span class="required">*</span></label>
+            <input type="date" id="form-date" required />
+            <span class="error-msg" id="form-date-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="form-amount">Amount (₹) <span class="required">*</span></label>
+            <input type="number" id="form-amount" placeholder="e.g. 5000" min="1" required />
+            <span class="error-msg" id="form-amount-error"></span>
+          </div>
+        </div>
+
+        <!-- Conditional Taravih Fields -->
+        <div id="form-taravih-fields" style="display: none; flex-direction: column; gap: 0.75rem; border-top: 1px dashed var(--border-color); padding-top: 0.75rem;">
+          
+          <!-- Transaction Type: Income vs Expense -->
+          <div class="form-group">
+            <label>Transaction Type <span class="required">*</span></label>
+            <div class="radio-chip-group">
+              <input type="radio" id="type-income" name="entry_type" value="income" checked>
+              <label for="type-income" class="radio-chip-label income">
+                <i class="ti ti-arrow-up-right"></i> Income (Donation)
+              </label>
+
+              <input type="radio" id="type-expense" name="entry_type" value="expense">
+              <label for="type-expense" class="radio-chip-label expense">
+                <i class="ti ti-arrow-down-left"></i> Expense (Imam Hadiyo)
+              </label>
+            </div>
+          </div>
+
+          <!-- Year & House No Row -->
+          <div class="form-group-row">
+            <div class="form-group">
+              <label for="form-taravih-year">Ramadan Year</label>
+              <select id="form-taravih-year" class="form-select">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+
+            <div class="form-group" id="form-house-no-group">
+              <label for="form-house-no">House Number</label>
+              <input type="text" id="form-house-no" placeholder="e.g. B-12" />
+            </div>
+          </div>
+
+          <!-- Donor/Payee Name -->
+          <div class="form-group" id="form-donor-name-group">
+            <label for="form-donor-name" id="label-donor-name">Donor Name</label>
+            <input type="text" id="form-donor-name" placeholder="e.g. Adnan Memon" />
+          </div>
+        </div>
+
+        <!-- Notes entry -->
+        <div class="form-group">
+          <label for="form-note">Note / Description</label>
+          <textarea id="form-note" placeholder="Enter transaction note..." rows="2" style="padding: 8px 10px; font-family: var(--font-body); font-size: 0.85rem; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); outline: none; resize: vertical;"></textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" id="cancel-modal-btn">Cancel</button>
+          <button type="submit" class="btn-primary" id="submit-btn">
+            <span class="btn-text">Add Record</span>
+            <div class="btn-spinner" id="submit-spinner" aria-hidden="true"></div>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal Overlay -->
+  <div class="modal-overlay" id="delete-confirm-overlay" aria-hidden="true" role="dialog" aria-labelledby="delete-confirm-title">
+    <div class="modal-container" style="max-width: 400px;">
+      <header class="modal-header" style="border-bottom: none; padding-bottom: 0.5rem;">
+        <h2 class="modal-title" id="delete-confirm-title" style="color: var(--color-expense-text);">Delete Record</h2>
+        <button class="btn-modal-close" id="close-delete-btn" aria-label="Close dialog">
+          <i class="ti ti-x" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <div class="modal-form" style="padding-top: 0;">
+        <div style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.45;">
+          Are you sure you want to delete this record? This action cannot be undone.
+        </div>
+        
+        <div class="total-remaining-display" style="background-color: var(--bg-tertiary); margin-bottom: 1rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Amount</span>
+            <strong id="delete-amount-display" style="color: var(--color-expense-text); font-family: var(--font-heading); font-size: 1.05rem;">₹0</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Date</span>
+            <span id="delete-date-display" style="font-weight: 600; font-size: 0.85rem;">-</span>
+          </div>
+          <div style="display: flex; flex-direction: column; border-top: 1px dashed var(--border-color); padding-top: 4px; margin-top: 2px;">
+            <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Note</span>
+            <span id="delete-note-display" style="font-size: 0.8rem; color: var(--text-secondary); word-break: break-word; text-align: left;">-</span>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" id="cancel-delete-btn">Cancel</button>
+          <button type="button" class="btn-primary" id="confirm-delete-btn" style="background-color: var(--color-expense-text);">
+            <span class="btn-text">Confirm Delete</span>
+            <div class="btn-spinner" id="delete-spinner" aria-hidden="true"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load Config & App Scripts -->
+  <script src="config.js?v=1.0.2"></script>
+  <script src="app.js?v=1.0.2"></script>
+</body>
+</html>
