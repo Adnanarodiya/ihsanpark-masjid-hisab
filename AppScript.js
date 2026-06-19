@@ -37,6 +37,21 @@ function doGet(e) {
       return str;
     };
 
+    // Helper to get fallback date from ID creation timestamp
+    const getFallbackDateFromId = (idVal) => {
+      if (idVal && idVal.indexOf("ID_") === 0) {
+        var parts = idVal.split("_");
+        if (parts.length >= 2) {
+          var timestamp = parseInt(parts[1], 10);
+          if (!isNaN(timestamp)) {
+            var date = new Date(timestamp);
+            return Utilities.formatDate(date, Session.getScriptTimeZone(), "yyyy-MM-dd");
+          }
+        }
+      }
+      return "";
+    };
+
     // Fetch Simple tabs (Jumma, Lillah, Madrasah)
     ["jumma", "lillah", "madresah"].forEach(category => {
       const sheet = ss.getSheetByName(SHEET_NAMES[category]);
@@ -52,9 +67,13 @@ function doGet(e) {
             // Process if at least one column has data
             if (row[0] || row[1] || row[2]) {
               const idVal = row[0] ? row[0].toString().trim() : "GEN_" + (i + 1) + "_" + Math.floor(Math.random() * 1000);
+              var dateStr = row[1] ? formatDate(row[1]) : "";
+              if (!dateStr) {
+                dateStr = getFallbackDateFromId(idVal);
+              }
               result[category].push({
                 id: idVal,
-                entry_date: row[1] ? formatDate(row[1]) : "",
+                entry_date: dateStr,
                 amount: Number(row[2]) || 0,
                 note: row[3] || ""
               });
@@ -76,10 +95,14 @@ function doGet(e) {
           const row = data[i];
           if (row[0] || row[2] || row[6]) {
             const idVal = row[0] ? row[0].toString().trim() : "GEN_T_" + (i + 1) + "_" + Math.floor(Math.random() * 1000);
+            var dateStr = row[2] ? formatDate(row[2]) : "";
+            if (!dateStr) {
+              dateStr = getFallbackDateFromId(idVal);
+            }
             result.taravih.push({
               id: idVal,
               year: Number(row[1]) || new Date().getFullYear(),
-              donation_date: row[2] ? formatDate(row[2]) : "",
+              donation_date: dateStr,
               entry_type: row[3] || "income",
               house_no: row[4] || "",
               donor_name: row[5] || "",

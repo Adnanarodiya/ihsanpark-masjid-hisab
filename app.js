@@ -870,7 +870,7 @@ function renderTable() {
     if (query) {
       const idStr = (item.id || '').toLowerCase();
       const noteStr = (item.note || '').toLowerCase();
-      const dateStr = (item.entry_date || item.donation_date || '').toLowerCase();
+      const dateStr = formatReadableDate(item.entry_date || item.donation_date, item.id).toLowerCase();
       const nameStr = (item.donor_name || '').toLowerCase();
       const houseStr = (item.house_no || '').toLowerCase();
       
@@ -894,8 +894,8 @@ function renderTable() {
   
   // Sort chronologically descending (newest dates at the top)
   filtered.sort((a, b) => {
-    const dateA = parseDate(a.entry_date || a.donation_date);
-    const dateB = parseDate(b.entry_date || b.donation_date);
+    const dateA = parseDate(a.entry_date || a.donation_date, a.id);
+    const dateB = parseDate(b.entry_date || b.donation_date, b.id);
     const timeA = dateA ? dateA.getTime() : 0;
     const timeB = dateB ? dateB.getTime() : 0;
     return timeB - timeA;
@@ -963,7 +963,7 @@ function renderTable() {
       card.id = `record-card-${row.id}`;
       card.innerHTML = `
         <div class="card-header-row">
-          <span class="card-date">${formatReadableDate(row.donation_date)}</span>
+          <span class="card-date">${formatReadableDate(row.donation_date, row.id)}</span>
           <div class="card-actions-top">
             <button class="btn-card-action edit" onclick="triggerEdit('${row.id}')" title="Edit Record">
               <i class="ti ti-edit"></i>
@@ -1002,7 +1002,7 @@ function renderTable() {
       card.id = `record-card-${row.id}`;
       card.innerHTML = `
         <div class="card-header-row">
-          <span class="card-date">${formatReadableDate(row.entry_date)}</span>
+          <span class="card-date">${formatReadableDate(row.entry_date, row.id)}</span>
           <div class="card-actions-top">
             <button class="btn-card-action edit" onclick="triggerEdit('${row.id}')" title="Edit Record">
               <i class="ti ti-edit"></i>
@@ -1080,7 +1080,7 @@ function openModal(mode, category = state.activeTab, recordId = null) {
       elements.formNote.value = item.note || '';
 
       if (targetCat === 'taravih') {
-        elements.formDate.value = item.donation_date || todayStr;
+        elements.formDate.value = formatDateToInput(item.donation_date, item.id) || todayStr;
         document.getElementById('form-taravih-year').value = item.year || new Date().getFullYear();
         document.getElementById('form-donor-name').value = item.donor_name || '';
         document.getElementById('form-house-no').value = item.house_no || '';
@@ -1093,7 +1093,7 @@ function openModal(mode, category = state.activeTab, recordId = null) {
           toggleHouseNoField('income');
         }
       } else {
-        elements.formDate.value = item.entry_date || todayStr;
+        elements.formDate.value = formatDateToInput(item.entry_date, item.id) || todayStr;
       }
     }
   } else {
@@ -1121,7 +1121,7 @@ function openDeleteModal(id) {
   
   if (item) {
     elements.deleteAmountDisplay.textContent = `₹${Number(item.amount).toLocaleString('en-IN')}`;
-    elements.deleteDateDisplay.textContent = formatReadableDate(item.entry_date || item.donation_date);
+    elements.deleteDateDisplay.textContent = formatReadableDate(item.entry_date || item.donation_date, item.id);
     elements.deleteNoteDisplay.textContent = item.note || '-';
     
     if (category === 'taravih') {
@@ -1149,7 +1149,8 @@ function handleFormSubmit(e) {
   const action = state.editRecordId ? 'edit' : 'add';
   const recordId = state.editRecordId;
 
-  const amount = Number(elements.formAmount.value);
+  const amountStr = elements.formAmount.value.trim();
+  const amount = amountStr === "" ? 0 : Number(amountStr);
   const note = elements.formNote.value.trim();
   const date = elements.formDate.value;
 
@@ -1162,8 +1163,11 @@ function handleFormSubmit(e) {
     document.getElementById("form-date-error").textContent = "Date is required";
     hasError = true;
   }
-  if (!amount || amount <= 0) {
-    document.getElementById("form-amount-error").textContent = "Valid amount is required";
+  if (amount < 0) {
+    document.getElementById("form-amount-error").textContent = "Amount cannot be negative";
+    hasError = true;
+  } else if (amount === 0 && !note) {
+    document.getElementById("form-amount-error").textContent = "Description (note) is required for 0 amount";
     hasError = true;
   }
 
@@ -1240,8 +1244,18 @@ function escapeHtml(text) {
 }
 
 // Helper to parse dates robustly, cleaning up times, timestamps, and zone suffixes like "00:00:00 GM"
-function parseDate(dStr) {
-  if (!dStr) return null;
+function parseDate(dStr, idStr = '') {
+  if (!dStr) {
+    if (idStr && idStr.startsWith('ID_')) {
+      const match = idStr.match(/^ID_(\d+)/);
+      if (match) {
+        const timestamp = parseInt(match[1]);
+        const date = new Date(timestamp);
+        if (!isNaN(date.getTime())) return date;
+      }
+    }
+    return null;
+  }
   let str = dStr.toString().trim();
   
   try {
@@ -1255,6 +1269,21 @@ function parseDate(dStr) {
           return new Date(parts[0], parts[1] - 1, parts[2]);
         } else if (parts[2].length === 4) {
           // DD-MM-YYYY
+          return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+      }
+    }
+    
+    // 1b. Handle yyyy/mm/dd or dd/mm/yyyy formats with slash delimiters
+    if (str.includes('/')) {
+      const datePart = str.split(' ')[0];
+      const parts = datePart.split('/');
+      if (parts.length === 3) {
+        if (parts[0].length === 4) {
+          // YYYY/MM/DD
+          return new Date(parts[0], parts[1] - 1, parts[2]);
+        } else if (parts[2].length === 4) {
+          // DD/MM/YYYY
           return new Date(parts[2], parts[1] - 1, parts[0]);
         }
       }
@@ -1298,14 +1327,23 @@ function parseDate(dStr) {
     console.error("Date parsing error: ", e);
   }
   
+  if (idStr && idStr.startsWith('ID_')) {
+    const match = idStr.match(/^ID_(\d+)/);
+    if (match) {
+      const timestamp = parseInt(match[1]);
+      const date = new Date(timestamp);
+      if (!isNaN(date.getTime())) return date;
+    }
+  }
+  
   return null;
 }
 
 // Format date into clean readable layout (e.g. "Wed, Jun 17, 2026") without timestamps
-function formatReadableDate(dateString) {
-  if (!dateString) return '-';
-  const date = parseDate(dateString);
-  if (!date) return dateString; // Fallback to raw string if parsing fails
+function formatReadableDate(dateString, idStr = '') {
+  if (!dateString && (!idStr || !idStr.startsWith('ID_'))) return '-';
+  const date = parseDate(dateString, idStr);
+  if (!date) return dateString || '-'; // Fallback to raw string if parsing fails
   
   // Format to "Wed, Jun 17, 2026"
   return date.toLocaleDateString('en-US', { 
@@ -1314,6 +1352,16 @@ function formatReadableDate(dateString) {
     month: 'short', 
     year: 'numeric' 
   });
+}
+
+// Format date into standard YYYY-MM-DD input field layout
+function formatDateToInput(dateString, idStr = '') {
+  const date = parseDate(dateString, idStr);
+  if (!date) return '';
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 // Toast Notification popup
