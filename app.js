@@ -902,15 +902,21 @@ function renderTable() {
   });
 
   // Calculate filtered totals
-  const sumVal = filtered.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
-  elements.ledgerFilteredSum.textContent = `₹${sumVal.toLocaleString('en-IN')}`;
+  const colExpense = document.getElementById("col-filtered-expense");
+  const colNet = document.getElementById("col-filtered-net");
+  const labelTotal = document.getElementById("label-filtered-total");
 
-  const taravihSummaryBox = document.getElementById("taravih-extra-summary");
   if (category === "taravih") {
-    taravihSummaryBox.style.display = "flex";
+    colExpense.style.display = "flex";
+    colNet.style.display = "flex";
+    labelTotal.textContent = "Filtered Income";
+
     const incVal = filtered.filter(r => r.entry_type === 'income').reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
     const expVal = filtered.filter(r => r.entry_type === 'expense').reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
     const netVal = incVal - expVal;
+
+    elements.ledgerFilteredSum.textContent = `₹${incVal.toLocaleString('en-IN')}`;
+    document.getElementById("ledger-filtered-expense").textContent = `₹${expVal.toLocaleString('en-IN')}`;
     
     const netEl = document.getElementById("ledger-filtered-net");
     netEl.textContent = `₹${netVal.toLocaleString('en-IN')}`;
@@ -920,7 +926,12 @@ function renderTable() {
       netEl.style.color = "var(--color-income-text)";
     }
   } else {
-    taravihSummaryBox.style.display = "none";
+    colExpense.style.display = "none";
+    colNet.style.display = "none";
+    labelTotal.textContent = "Filtered Total";
+
+    const sumVal = filtered.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+    elements.ledgerFilteredSum.textContent = `₹${sumVal.toLocaleString('en-IN')}`;
   }
 
   // Update Title text and Icon in the Banner

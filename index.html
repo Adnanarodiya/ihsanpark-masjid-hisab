@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 
   <!-- Style Link -->
-  <link rel="stylesheet" href="style.css?v=1.0.3">
+  <link rel="stylesheet" href="style.css?v=1.0.4">
 
   <!-- PWA & Mobile Web App Meta -->
   <link rel="manifest" href="manifest.json">
@@ -227,11 +227,15 @@
 
         <!-- Ledger Statistics Box -->
         <div class="ledger-summary-stats-box">
-          <div class="summary-col">
-            <span class="sum-label">Filtered Total</span>
+          <div class="summary-col" id="col-filtered-total">
+            <span class="sum-label" id="label-filtered-total">Filtered Total</span>
             <span class="sum-val" id="ledger-filtered-sum">₹0</span>
           </div>
-          <div class="summary-col" id="taravih-extra-summary" style="display: none;">
+          <div class="summary-col" id="col-filtered-expense" style="display: none;">
+            <span class="sum-label">Filtered Expense</span>
+            <span class="sum-val" id="ledger-filtered-expense" style="color: var(--color-expense-text);">₹0</span>
+          </div>
+          <div class="summary-col" id="col-filtered-net" style="display: none;">
             <span class="sum-label">Net Balance</span>
             <span class="sum-val" id="ledger-filtered-net">₹0</span>
           </div>
@@ -415,7 +419,7 @@
   </div>
 
   <!-- Load Config & App Scripts -->
-  <script src="config.js?v=1.0.3"></script>
-  <script src="app.js?v=1.0.3"></script>
+  <script src="config.js?v=1.0.4"></script>
+  <script src="app.js?v=1.0.4"></script>
 </body>
 </html>
