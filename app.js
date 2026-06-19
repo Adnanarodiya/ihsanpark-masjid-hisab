@@ -950,7 +950,7 @@ function renderTable() {
     return;
   }
   
-  filtered.forEach(row => {
+  filtered.forEach((row, idx) => {
     const card = document.createElement('div');
     
     if (category === 'taravih') {
@@ -963,7 +963,10 @@ function renderTable() {
       card.id = `record-card-${row.id}`;
       card.innerHTML = `
         <div class="card-header-row">
-          <span class="card-date">${formatReadableDate(row.donation_date, row.id)}</span>
+          <div class="card-header-left">
+            <span class="card-serial">#${idx + 1}</span>
+            <span class="card-date">${formatReadableDate(row.donation_date, row.id)}</span>
+          </div>
           <div class="card-actions-top">
             <button class="btn-card-action edit" onclick="triggerEdit('${row.id}')" title="Edit Record">
               <i class="ti ti-edit"></i>
@@ -1002,7 +1005,10 @@ function renderTable() {
       card.id = `record-card-${row.id}`;
       card.innerHTML = `
         <div class="card-header-row">
-          <span class="card-date">${formatReadableDate(row.entry_date, row.id)}</span>
+          <div class="card-header-left">
+            <span class="card-serial">#${idx + 1}</span>
+            <span class="card-date">${formatReadableDate(row.entry_date, row.id)}</span>
+          </div>
           <div class="card-actions-top">
             <button class="btn-card-action edit" onclick="triggerEdit('${row.id}')" title="Edit Record">
               <i class="ti ti-edit"></i>
