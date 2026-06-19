@@ -973,72 +973,72 @@ function renderTable() {
       card.className = `record-card ${typeClass}`;
       card.id = `record-card-${row.id}`;
       card.innerHTML = `
-        <div class="card-header-row">
-          <div class="card-header-left">
-            <span class="card-serial">#${filtered.length - idx}</span>
+        <div class="card-serial-block">${filtered.length - idx}</div>
+        <div class="card-content-area">
+          <div class="card-header-row">
             <span class="card-date">${formatReadableDate(row.donation_date, row.id)}</span>
+            <div class="card-actions-top">
+              <button class="btn-card-action edit" onclick="triggerEdit('${row.id}')" title="Edit Record">
+                <i class="ti ti-edit"></i>
+              </button>
+              <button class="btn-card-action delete" onclick="triggerDelete('${row.id}')" title="Delete Record">
+                <i class="ti ti-trash"></i>
+              </button>
+            </div>
           </div>
-          <div class="card-actions-top">
-            <button class="btn-card-action edit" onclick="triggerEdit('${row.id}')" title="Edit Record">
-              <i class="ti ti-edit"></i>
-            </button>
-            <button class="btn-card-action delete" onclick="triggerDelete('${row.id}')" title="Delete Record">
-              <i class="ti ti-trash"></i>
-            </button>
+          <div class="card-body-row">
+            <span class="card-title-main">${escapeHtml(row.donor_name || 'Hadiyo Payout')}</span>
+            <span class="${amountClass}">${amountSign}₹${Number(row.amount).toLocaleString('en-IN')}</span>
           </div>
-        </div>
-        <div class="card-body-row">
-          <span class="card-title-main">${escapeHtml(row.donor_name || 'Hadiyo Payout')}</span>
-          <span class="${amountClass}">${amountSign}₹${Number(row.amount).toLocaleString('en-IN')}</span>
-        </div>
-        <div class="taravih-details-box">
-          <div class="taravih-details-item">
-            <i class="ti ti-tag"></i> ${typeBadge}
-          </div>
-          <div class="taravih-details-item">
-            <i class="ti ti-history"></i> Year: <strong>${row.year}</strong>
-          </div>
-          ${row.house_no ? `
+          <div class="taravih-details-box">
             <div class="taravih-details-item">
-              <i class="ti ti-home"></i> House: <strong>${row.house_no}</strong>
+              <i class="ti ti-tag"></i> ${typeBadge}
+            </div>
+            <div class="taravih-details-item">
+              <i class="ti ti-history"></i> Year: <strong>${row.year}</strong>
+            </div>
+            ${row.house_no ? `
+              <div class="taravih-details-item">
+                <i class="ti ti-home"></i> House: <strong>${row.house_no}</strong>
+              </div>
+            ` : ''}
+          </div>
+          ${row.note ? `
+            <div class="card-note-box">
+              <i class="ti ti-notes"></i>
+              <span>${escapeHtml(row.note)}</span>
             </div>
           ` : ''}
         </div>
-        ${row.note ? `
-          <div class="card-note-box">
-            <i class="ti ti-notes"></i>
-            <span>${escapeHtml(row.note)}</span>
-          </div>
-        ` : ''}
       `;
     } else {
       card.className = 'record-card';
       card.id = `record-card-${row.id}`;
       card.innerHTML = `
-        <div class="card-header-row">
-          <div class="card-header-left">
-            <span class="card-serial">#${filtered.length - idx}</span>
+        <div class="card-serial-block">${filtered.length - idx}</div>
+        <div class="card-content-area">
+          <div class="card-header-row">
             <span class="card-date">${formatReadableDate(row.entry_date, row.id)}</span>
+            <div class="card-actions-top">
+              <button class="btn-card-action edit" onclick="triggerEdit('${row.id}')" title="Edit Record">
+                <i class="ti ti-edit"></i>
+              </button>
+              <button class="btn-card-action delete" onclick="triggerDelete('${row.id}')" title="Delete Record">
+                <i class="ti ti-trash"></i>
+              </button>
+            </div>
           </div>
-          <div class="card-actions-top">
-            <button class="btn-card-action edit" onclick="triggerEdit('${row.id}')" title="Edit Record">
-              <i class="ti ti-edit"></i>
-            </button>
-            <button class="btn-card-action delete" onclick="triggerDelete('${row.id}')" title="Delete Record">
-              <i class="ti ti-trash"></i>
-            </button>
+          <div class="card-body-row">
+            <span class="card-title-main">${category.toUpperCase()} Collection</span>
+            <span class="card-amount-val">+ ₹${Number(row.amount).toLocaleString('en-IN')}</span>
           </div>
+          ${row.note ? `
+            <div class="card-note-box">
+              <i class="ti ti-notes"></i>
+              <span>${escapeHtml(row.note)}</span>
+            </div>
+          ` : ''}
         </div>
-        <div class="card-body-row">
-          <span class="card-title-main">${category.toUpperCase()} Collection</span>
-          <span class="card-amount-val">+ ₹${Number(row.amount).toLocaleString('en-IN')}</span>
-        </div>
-        ${row.note ? `
-          <div class="card-note-box">
-            <i class="ti ti-notes"></i>
-            <span>${escapeHtml(row.note)}</span>
-          </div>
-        ` : ''}
       `;
     }
     
