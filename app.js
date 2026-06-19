@@ -964,7 +964,7 @@ function renderTable() {
       card.innerHTML = `
         <div class="card-header-row">
           <div class="card-header-left">
-            <span class="card-serial">#${idx + 1}</span>
+            <span class="card-serial">#${filtered.length - idx}</span>
             <span class="card-date">${formatReadableDate(row.donation_date, row.id)}</span>
           </div>
           <div class="card-actions-top">
@@ -1006,7 +1006,7 @@ function renderTable() {
       card.innerHTML = `
         <div class="card-header-row">
           <div class="card-header-left">
-            <span class="card-serial">#${idx + 1}</span>
+            <span class="card-serial">#${filtered.length - idx}</span>
             <span class="card-date">${formatReadableDate(row.entry_date, row.id)}</span>
           </div>
           <div class="card-actions-top">
